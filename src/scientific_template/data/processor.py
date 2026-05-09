@@ -6,7 +6,7 @@ Utilities for processing and manipulating data.
 """
 
 import pandas as pd
-from typing import Union, Optional, List, Dict, Any, Callable
+from typing import Union, Optional, List, Dict, Any, TYPE_CHECKING, Callable
 from pathlib import Path
 
 # Try to import polars, but make it optional
@@ -15,9 +15,17 @@ try:
     HAS_POLARS = True
 except ImportError:
     HAS_POLARS = False
-    class _DummyPolars:
-        DataFrame = None  # type: ignore
-    pl = _DummyPolars()  # type: ignore
+    pl = None  # type: ignore
+
+# For type hints only when polars is not installed
+if TYPE_CHECKING:
+    import pandas as pd
+    try:
+        import polars as pl
+    except ImportError:
+        pass
+
+DataFrame = Union[pd.DataFrame, "pl.DataFrame"] if HAS_POLARS else pd.DataFrame
 
 
 class DataProcessor:
@@ -40,10 +48,10 @@ class DataProcessor:
     
     def remove_duplicates(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         subset: Optional[List[str]] = None,
         keep: str = "first"
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Remove duplicate rows from the DataFrame.
         
@@ -65,11 +73,11 @@ class DataProcessor:
     
     def handle_missing(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         strategy: str = "drop",
         columns: Optional[List[str]] = None,
         fill_value: Any = None
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Handle missing values in the DataFrame.
         
@@ -129,9 +137,9 @@ class DataProcessor:
     
     def rename_columns(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         mapping: Dict[str, str]
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Rename columns in the DataFrame.
         
@@ -149,9 +157,9 @@ class DataProcessor:
     
     def select_columns(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         columns: List[str]
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Select specific columns from the DataFrame.
         
@@ -169,9 +177,9 @@ class DataProcessor:
     
     def filter_rows(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         condition: Callable[[Any], bool]
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Filter rows based on a condition.
         
@@ -190,10 +198,10 @@ class DataProcessor:
     
     def sort_values(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         by: Union[str, List[str]],
         ascending: Union[bool, List[bool]] = True
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Sort DataFrame by values.
         
@@ -216,10 +224,10 @@ class DataProcessor:
     
     def add_column(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         name: str,
         values: Union[Any, List[Any], Callable]
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Add a new column to the DataFrame.
         
@@ -245,7 +253,7 @@ class DataProcessor:
                 df = df.with_columns(pl.lit(values).alias(name))
             return df
     
-    def get_info(self, df: Union[pd.DataFrame, pl.DataFrame]) -> Dict[str, Any]:
+    def get_info(self, df: DataFrame) -> Dict[str, Any]:
         """
         Get summary information about the DataFrame.
         

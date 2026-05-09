@@ -6,17 +6,26 @@ Utilities for transforming and reshaping data.
 """
 
 import pandas as pd
+from typing import Union, Optional, List, Dict, Any, TYPE_CHECKING, Callable
+import numpy as np
+
 # Try to import polars, but make it optional
 try:
     import polars as pl
     HAS_POLARS = True
 except ImportError:
     HAS_POLARS = False
-    class _DummyPolars:
-        DataFrame = None  # type: ignore
-    pl = _DummyPolars()  # type: ignore
-from typing import Union, Optional, List, Dict, Any, Callable
-import numpy as np
+    pl = None  # type: ignore
+
+# For type hints only when polars is not installed
+if TYPE_CHECKING:
+    import pandas as pd
+    try:
+        import polars as pl
+    except ImportError:
+        pass
+
+DataFrame = Union[pd.DataFrame, "pl.DataFrame"] if HAS_POLARS else pd.DataFrame
 
 
 class DataTransformer:
@@ -39,10 +48,10 @@ class DataTransformer:
     
     def normalize(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         columns: Optional[List[str]] = None,
         method: str = "minmax"
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Normalize numeric columns.
         
@@ -113,10 +122,10 @@ class DataTransformer:
     
     def encode_categorical(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         columns: Optional[List[str]] = None,
         method: str = "onehot"
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Encode categorical variables.
         
@@ -170,12 +179,12 @@ class DataTransformer:
     
     def pivot(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         index: str,
         columns: str,
         values: str,
         aggfunc: str = "mean"
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Pivot the DataFrame.
         
@@ -196,12 +205,12 @@ class DataTransformer:
     
     def melt(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         id_vars: Optional[List[str]] = None,
         value_vars: Optional[List[str]] = None,
         var_name: str = "variable",
         value_name: str = "value"
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Melt the DataFrame from wide to long format.
         
@@ -233,12 +242,12 @@ class DataTransformer:
     
     def binning(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         column: str,
         bins: Union[int, List[float]],
         labels: Optional[List[str]] = None,
         right: bool = True
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Bin continuous data into discrete intervals.
         
@@ -278,10 +287,10 @@ class DataTransformer:
     
     def log_transform(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         columns: Optional[List[str]] = None,
         base: float = np.e
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Apply log transformation to numeric columns.
         
@@ -329,12 +338,12 @@ class DataTransformer:
     
     def rolling_window(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         column: str,
         window: int,
         operation: str = "mean",
         min_periods: Optional[int] = None
-    ) -> Union[pd.Series, pl.Series]:
+    ) -> pd.Series:
         """
         Apply rolling window operations.
         
