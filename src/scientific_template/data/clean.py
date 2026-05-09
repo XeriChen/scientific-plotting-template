@@ -6,17 +6,26 @@ Utilities for cleaning and validating data.
 """
 
 import pandas as pd
+from typing import Union, Optional, List, Dict, Any, TYPE_CHECKING
+import re
+
 # Try to import polars, but make it optional
 try:
     import polars as pl
     HAS_POLARS = True
 except ImportError:
     HAS_POLARS = False
-    class _DummyPolars:
-        DataFrame = None  # type: ignore
-    pl = _DummyPolars()  # type: ignore
-from typing import Union, Optional, List, Dict, Any, Set
-import re
+    pl = None  # type: ignore
+
+# For type hints only when polars is not installed
+if TYPE_CHECKING:
+    import pandas as pd
+    try:
+        import polars as pl
+    except ImportError:
+        pass
+
+DataFrame = Union[pd.DataFrame, "pl.DataFrame"] if HAS_POLARS else pd.DataFrame
 
 
 class DataCleaner:
@@ -39,9 +48,9 @@ class DataCleaner:
     
     def standardize_column_names(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         case: str = "snake"
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Standardize column names to a consistent format.
         
@@ -83,9 +92,9 @@ class DataCleaner:
     
     def remove_whitespace(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         columns: Optional[List[str]] = None
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Remove leading and trailing whitespace from string columns.
         
@@ -116,9 +125,9 @@ class DataCleaner:
     
     def fix_data_types(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         column_types: Optional[Dict[str, str]] = None
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Fix data types for columns.
         
@@ -155,10 +164,10 @@ class DataCleaner:
     
     def remove_special_characters(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         columns: Optional[List[str]] = None,
         pattern: str = r'[^a-zA-Z0-9\s]'
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Remove special characters from string columns.
         
@@ -189,10 +198,10 @@ class DataCleaner:
     
     def validate_email(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         column: str,
         remove_invalid: bool = True
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Validate and optionally remove invalid email addresses.
         
@@ -222,7 +231,7 @@ class DataCleaner:
     
     def detect_outliers_iqr(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         columns: Optional[List[str]] = None,
         multiplier: float = 1.5
     ) -> Union[pd.DataFrame, Dict[str, pd.Series]]:
@@ -271,9 +280,9 @@ class DataCleaner:
     
     def clean_currency(
         self,
-        df: Union[pd.DataFrame, pl.DataFrame],
+        df: DataFrame,
         columns: Optional[List[str]] = None
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Clean currency columns by removing symbols and converting to numeric.
         

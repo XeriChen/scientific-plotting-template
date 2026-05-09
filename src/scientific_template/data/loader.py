@@ -7,7 +7,7 @@ Utilities for loading data from various file formats.
 
 import pandas as pd
 from pathlib import Path
-from typing import Union, Optional, Dict, Any
+from typing import Union, Optional, Dict, Any, TYPE_CHECKING
 
 # Try to import polars, but make it optional
 try:
@@ -15,10 +15,17 @@ try:
     HAS_POLARS = True
 except ImportError:
     HAS_POLARS = False
-    # Create a dummy pl module for type hints
-    class _DummyPolars:
-        DataFrame = None  # type: ignore
-    pl = _DummyPolars()  # type: ignore
+    pl = None  # type: ignore
+
+# For type hints only when polars is not installed
+if TYPE_CHECKING:
+    import pandas as pd
+    try:
+        import polars as pl
+    except ImportError:
+        pass
+
+DataFrame = Union[pd.DataFrame, "pl.DataFrame"] if HAS_POLARS else pd.DataFrame
 
 
 class DataLoader:
@@ -43,7 +50,7 @@ class DataLoader:
         self, 
         filepath: Union[str, Path], 
         **kwargs
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Load data from a CSV file.
         
@@ -65,7 +72,7 @@ class DataLoader:
         filepath: Union[str, Path],
         sheet_name: Optional[Union[int, str]] = None,
         **kwargs
-    ) -> Union[pd.DataFrame, Dict[str, pd.DataFrame], pl.DataFrame]:
+    ) -> Union[DataFrame, Dict[str, pd.DataFrame]]:
         """
         Load data from an Excel file.
         
@@ -88,7 +95,7 @@ class DataLoader:
         self,
         filepath: Union[str, Path],
         **kwargs
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Load data from a JSON file.
         
@@ -109,7 +116,7 @@ class DataLoader:
         self,
         filepath: Union[str, Path],
         **kwargs
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Load data from a Parquet file.
         
@@ -130,7 +137,7 @@ class DataLoader:
         self,
         filepath: Union[str, Path],
         **kwargs
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Load data from a Feather file.
         
@@ -152,7 +159,7 @@ class DataLoader:
         filepath: Union[str, Path],
         file_format: Optional[str] = None,
         **kwargs
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    ) -> DataFrame:
         """
         Auto-detect file format and load data.
         
