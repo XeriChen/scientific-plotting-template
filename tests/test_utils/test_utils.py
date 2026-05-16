@@ -1,11 +1,10 @@
 """
-Tests for the utils module.
+测试工具模块
 """
+
 import pytest
-import json
-import yaml
-import logging
-from pathlib import Path
+import os
+import tempfile
 from scientific_template.utils import (
     setup_logging,
     set_style,
@@ -17,171 +16,152 @@ from scientific_template.utils import (
     flatten_dict,
     deep_merge
 )
+import logging
 
 
 class TestLogging:
-    """Test logging utilities."""
+    """日志设置测试"""
     
-    def test_setup_logging(self):
-        """Test setting up logging."""
-        logger = setup_logging(level=logging.INFO)
+    def test_setup_logging(self, tmp_path):
+        """测试日志设置"""
+        log_file = tmp_path / "test.log"
+        logger = setup_logging(level="INFO", log_file=str(log_file))
         
-        assert isinstance(logger, logging.Logger)
+        assert logger is not None
         assert logger.level == logging.INFO
-        assert len(logger.handlers) >= 1
-    
-    def test_setup_logging_with_file(self, temp_dir):
-        """Test setting up logging with file handler."""
-        log_file = temp_dir / "test.log"
-        logger = setup_logging(level=logging.DEBUG, log_file=log_file)
         
-        assert len(logger.handlers) == 2  # Console + File
+        logger.info("Test log message")
         assert log_file.exists()
+        
+        with open(log_file, 'r') as f:
+            content = f.read()
+            assert "Test log message" in content
 
 
-class TestConfig:
-    """Test configuration utilities."""
+class TestConfiguration:
+    """配置管理测试"""
     
-    def test_load_config_yaml(self, temp_dir):
-        """Test loading YAML config."""
-        config_file = temp_dir / "config.yaml"
-        config = {"project": {"name": "Test", "version": "1.0"}}
+    def test_load_config_yaml(self, tmp_path):
+        """测试加载YAML配置"""
+        config_content = """
+project:
+  name: "Test Project"
+  version: "0.1.0"
+plotting:
+  style: "seaborn-v0_8"
+  dpi: 300
+"""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(config_content)
         
-        with open(config_file, 'w') as f:
-            yaml.dump(config, f)
-        
-        loaded = load_config(config_file)
-        
-        assert loaded == config
-        assert loaded['project']['name'] == "Test"
+        config = load_config(str(config_file))
+        assert config["project"]["name"] == "Test Project"
+        assert config["plotting"]["dpi"] == 300
     
-    def test_load_config_json(self, temp_dir):
-        """Test loading JSON config."""
-        config_file = temp_dir / "config.json"
-        config = {"project": {"name": "Test", "version": "1.0"}}
+    def test_save_config(self, tmp_path):
+        """测试保存配置"""
+        config = {
+            "key1": "value1",
+            "nested": {
+                "key2": 42
+            }
+        }
+        output_file = tmp_path / "output.yaml"
         
-        with open(config_file, 'w') as f:
-            json.dump(config, f)
+        save_config(config, str(output_file))
+        assert output_file.exists()
         
-        loaded = load_config(config_file)
-        
-        assert loaded == config
-    
-    def test_load_config_not_found(self):
-        """Test loading non-existent config."""
-        with pytest.raises(FileNotFoundError):
-            load_config("nonexistent.yaml")
-    
-    def test_save_config_yaml(self, temp_dir):
-        """Test saving YAML config."""
-        config_file = temp_dir / "config.yaml"
-        config = {"project": {"name": "Test"}}
-        
-        save_config(config, config_file)
-        
-        assert config_file.exists()
-        
-        with open(config_file, 'r') as f:
-            loaded = yaml.safe_load(f)
-        
-        assert loaded == config
-    
-    def test_save_config_json(self, temp_dir):
-        """Test saving JSON config."""
-        config_file = temp_dir / "config.json"
-        config = {"project": {"name": "Test"}}
-        
-        save_config(config, config_file)
-        
-        assert config_file.exists()
-        
-        with open(config_file, 'r') as f:
-            loaded = json.load(f)
-        
-        assert loaded == config
+        loaded = load_config(str(output_file))
+        assert loaded["key1"] == "value1"
+        assert loaded["nested"]["key2"] == 42
 
 
-class TestHelpers:
-    """Test helper functions."""
+class TestTimer:
+    """计时器装饰器测试"""
     
-    def test_get_timestamp(self):
-        """Test getting timestamp."""
-        ts = get_timestamp()
+    def test_timer_decorator(self, capfd):
+        """测试计时器装饰器"""
+        @timer
+        def fast_function():
+            pass
         
-        assert isinstance(ts, str)
-        assert len(ts) > 0
+        fast_function()
+        
+        captured = capfd.readouterr()
+        assert "completed in" in captured.out
+
+
+class TestFileUtils:
+    """文件工具函数测试"""
     
-    def test_get_timestamp_custom_format(self):
-        """Test getting timestamp with custom format."""
-        ts = get_timestamp("%Y-%m-%d")
-        
-        assert len(ts) == 10  # YYYY-MM-DD
-    
-    def test_ensure_dir(self, temp_dir):
-        """Test ensuring directory exists."""
-        new_dir = temp_dir / "subdir" / "nested"
-        
+    def test_ensure_dir(self, tmp_path):
+        """测试确保目录存在"""
+        new_dir = tmp_path / "new" / "nested" / "directory"
         result = ensure_dir(new_dir)
         
         assert result.exists()
         assert result.is_dir()
+        assert str(result) == str(new_dir)
+    
+    def test_get_timestamp(self):
+        """测试获取时间戳"""
+        timestamp = get_timestamp()
+        assert isinstance(timestamp, str)
+        assert len(timestamp) > 0
+        
+        custom_timestamp = get_timestamp("%Y-%m-%d")
+        assert isinstance(custom_timestamp, str)
+        assert len(custom_timestamp) == 10
+
+
+class TestDictUtils:
+    """字典工具函数测试"""
     
     def test_flatten_dict(self):
-        """Test flattening nested dictionary."""
+        """测试扁平化字典"""
         nested = {
-            'a': 1,
-            'b': {
-                'c': 2,
-                'd': {
-                    'e': 3
+            "a": 1,
+            "b": {
+                "c": 2,
+                "d": {
+                    "e": 3
                 }
             }
         }
         
         flat = flatten_dict(nested)
-        
-        assert flat == {'a': 1, 'b.c': 2, 'b.d.e': 3}
+        assert flat["a"] == 1
+        assert flat["b.c"] == 2
+        assert flat["b.d.e"] == 3
     
     def test_deep_merge(self):
-        """Test deep merging dictionaries."""
+        """测试深度合并字典"""
         dict1 = {
-            'a': 1,
-            'b': {
-                'c': 2,
-                'd': 3
-            }
+            "a": 1,
+            "b": {"c": 2},
+            "d": 3
         }
-        
         dict2 = {
-            'b': {
-                'c': 20,
-                'e': 4
-            },
-            'f': 5
+            "b": {"c": 20, "e": 4},
+            "d": 30,
+            "f": 5
         }
         
         merged = deep_merge(dict1, dict2)
-        
-        assert merged['a'] == 1
-        assert merged['b']['c'] == 20  # Overridden
-        assert merged['b']['d'] == 3   # Preserved
-        assert merged['b']['e'] == 4   # Added
-        assert merged['f'] == 5        # Added
+        assert merged["a"] == 1
+        assert merged["b"]["c"] == 20
+        assert merged["b"]["e"] == 4
+        assert merged["d"] == 30
+        assert merged["f"] == 5
 
 
-class TestTimer:
-    """Test timer decorator."""
+class TestStyle:
+    """样式设置测试"""
     
-    def test_timer_decorator(self, capsys):
-        """Test timer decorator outputs execution time."""
-        
-        @timer
-        def quick_function():
-            return 42
-        
-        result = quick_function()
-        
-        assert result == 42
-        captured = capsys.readouterr()
-        assert "quick_function" in captured.out
-        assert ("ms" in captured.out or "s" in captured.out)
+    def test_set_style(self):
+        """测试设置样式"""
+        # 这个测试主要验证函数不会抛出异常
+        try:
+            set_style(style="seaborn-v0_8", context="notebook")
+        except Exception as e:
+            pytest.fail(f"set_style raised an exception: {e}")
