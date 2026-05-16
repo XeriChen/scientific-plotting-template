@@ -4,13 +4,48 @@ Simplified SSE Benchmark Script
 
 import subprocess
 import os
+import sys
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-SSE_EXECUTABLE = "/home/xeri/Documents/cqu-bysj-phy/src/build/src/SSE"
+def find_sse_executable():
+    """查找 SSE 可执行文件，支持从环境变量、默认位置或 PATH 中查找"""
+    # 1. 从环境变量查找
+    exe_path = os.environ.get("SSE_EXECUTABLE")
+    if exe_path and os.path.exists(exe_path):
+        return exe_path
+    
+    # 2. 从默认位置查找
+    default_paths = [
+        Path.home() / "Documents" / "cqu-bysj-phy" / "src" / "build" / "src" / "SSE",
+        Path(__file__).parent.parent / "cqu-bysj-phy" / "src" / "build" / "src" / "SSE",
+        Path(__file__).parent / "SSE",
+    ]
+    
+    for path in default_paths:
+        if os.path.exists(path):
+            return str(path)
+    
+    # 3. 检查是否在 PATH 中
+    for path_dir in os.environ.get("PATH", "").split(os.pathsep):
+        exe_in_path = Path(path_dir) / "SSE"
+        if exe_in_path.exists():
+            return str(exe_in_path)
+    
+    return "SSE"  # 默认，尝试直接调用
+
+
+SSE_EXECUTABLE = find_sse_executable()
+
+# 验证可执行文件是否存在
+if not (os.path.exists(SSE_EXECUTABLE) or os.access(SSE_EXECUTABLE, os.X_OK) or 
+         any((Path(path_dir) / "SSE").exists() for path_dir in os.environ.get("PATH", "").split(os.pathsep))):
+    print("警告: 找不到 SSE 可执行文件", file=sys.stderr)
+    print(f"请设置环境变量 SSE_EXECUTABLE=/path/to/SSE 或将 SSE 添加到 PATH", file=sys.stderr)
+
 OUTPUT_DIR = Path(__file__).parent / "benchmark_results"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
