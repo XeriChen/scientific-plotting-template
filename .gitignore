@@ -1,4 +1,3 @@
-```
 # Python
 __pycache__/
 *.pyc
@@ -28,9 +27,11 @@ htmlcov/
 .cache/
 .pytest_cache/
 .hypothesis/
+.ruff_cache/
 
 # Logs
 *.log
+logs/
 
 # OS
 .DS_Store
@@ -42,6 +43,8 @@ Thumbs.db
 *.swp
 *.swo
 *.tmp
+*.sublime-project
+*.sublime-workspace
 
 # Environment variables
 .env
@@ -52,4 +55,32 @@ Thumbs.db
 # UV Package Manager
 uv.lock
 .uv/
-```
+
+# Performance profiling
+gmon.out
+*.prof
+
+# Output directories
+output/
+data/output/
+data/cache/
+
+# Benchmark results
+benchmark_results/
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Debug
+*.debug
+core.*
+
+# Documentation builds
+docs/_build/
+site/
+
+# Virtual machines
+*.ova
+*.vmdk
+*.vdi
