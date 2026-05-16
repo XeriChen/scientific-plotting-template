@@ -1,0 +1,82 @@
+# Scientific Template 配置文件
+# Scientific Template Configuration File
+
+# 项目配置
+project:
+  name: "Scientific Plotting Template"
+  version: "0.1.0"
+  author: "Your Name"
+  email: "your.email@example.com"
+  description: "A modern Python data analysis and visualization workspace"
+
+# 数据路径配置
+data:
+  input_dir: "data/input"
+  output_dir: "data/output"
+  sample_data: "data/input/sales_data.csv"
+  cache_dir: "data/cache"
+
+# 可视化配置
+plotting:
+  style: "seaborn-v0_8"
+  context: "notebook"
+  dpi: 300
+  figsize:
+    width: 10
+    height: 6
+  colors:
+    primary: "#1f77b4"
+    secondary: "#ff7f0e"
+    accent: "#2ca02c"
+    background: "#ffffff"
+  font:
+    family: "sans-serif"
+    size: 12
+  palette: "deep"
+  save_format: "png"
+
+# 日志配置
+logging:
+  level: "INFO"
+  file: "logs/app.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  max_size_mb: 10
+  backup_count: 5
+
+# 机器学习配置
+ml:
+  test_size: 0.2
+  random_state: 42
+  cv_folds: 5
+  scoring:
+    classification: "accuracy"
+    regression: "r2"
+  feature_scaling: true
+  encode_categorical: true
+
+# 统计分析配置
+stats:
+  confidence_level: 0.95
+  correlation_method: "pearson"
+  outlier_threshold: 1.5
+
+# 性能配置
+performance:
+  cache_enabled: true
+  verbose: true
+  parallel_processing: false
+  num_workers: 4
+
+# 输出配置
+output:
+  figures_dir: "output/figures"
+  tables_dir: "output/tables"
+  models_dir: "output/models"
+  reports_dir: "output/reports"
+
+# 国际化配置
+locale:
+  language: "zh-CN"
+  timezone: "Asia/Shanghai"
+  date_format: "%Y-%m-%d"
+  datetime_format: "%Y-%m-%d %H:%M:%S"
