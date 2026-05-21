@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "xeri chen", email = "xeri_chen@163.com"}
 ]
 dependencies = [
     # 数据处理 (核心)
@@ -126,10 +126,10 @@ test = [
 spt = "scientific_template.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/scientific-plotting-template"
+Homepage = "https://github.com/XeriChen/scientific-plotting-template"
 Documentation = "https://scientific-plotting-template.readthedocs.io"
-Repository = "https://github.com/yourusername/scientific-plotting-template"
-Issues = "https://github.com/yourusername/scientific-plotting-template/issues"
+Repository = "https://github.com/XeriChen/scientific-plotting-template"
+Issues = "https://github.com/XeriChen/scientific-plotting-template/issues"
 
 [tool.ruff]
 line-length = 88
